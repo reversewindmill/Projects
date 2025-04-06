@@ -1,0 +1,116 @@
+
+The goal of this EDA to is answer some of the questions relative to trends focusing on number of orders or total cost of freight.
+
+Tools Used: Google Big Query
+
+The Dataset are composed of the ff files:
+Orders
+Categories
+Customers
+Product
+Order Details
+Shippers
+
+Note: 
+
+These brief EDA was made into the condition that the dataset doesn’t need data cleaning.
+Some of the skills used are: Joins, Date_trunc, Round, Limit, Offset, DateDiff, Countif, Min & Max
+
+
+## How many products do we have each Categories? (Also get the average unit price each categories
+
+SELECT 
+
+ct.categoryName as Category,
+COUNT(productID) as Product_Count,
+ROUND(AVG(unitPrice),1) as Ave_Unit_Price
+
+FROM `Northwind_Traders.products` as pr
+
+LEFT JOIN `Northwind_Traders.categories` as ct
+ON pr.categoryID = ct.categoryID
+
+WHERE pr.discontinued = 0
+
+GROUP BY 1
+ORDER BY 2 DESC
+
+
+### Determine the top 5 companies with the most orders
+SELECT 
+
+cs.company_name as company,
+count(orders.freight) as order_count
+
+
+FROM `Northwind_Traders.orders` as orders
+
+LEFT JOIN `Northwind_Traders.Customer` as cs
+ON orders.customerID = cs.customer_id
+
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 5
+
+
+## Determine the 2nd most expensive product being sold
+SELECT 
+pd.productName as product,
+MAX(pd.unitPrice) as second_exp
+
+FROM `Northwind_Traders.products` pd
+
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 1 OFFSET 1
+
+## Total number of Freights per month
+
+SELECT
+date_trunc(ord.orderDate, MONTH) as M,
+ROUND(SUM(ord.freight),1) as Total_Freight
+
+
+
+FROM `Northwind_Traders.orders` as ord
+
+LEFT JOIN `Northwind_Traders.shippers` as sp
+ON ord.shipperID = sp.shipperID
+
+GROUP BY  1
+
+
+
+##Total number of monthly order of each Shipping Line
+
+SELECT
+date_trunc(ord.orderDate, MONTH) as M,
+COUNTIF(ord.shipperID = 1) as Speedy,
+COUNTIF(ord.shipperID = 2) as United_Package,
+COUNTIF(ord.shipperID = 3) as Federal
+
+
+FROM `Northwind_Traders.orders` as ord
+
+LEFT JOIN `Northwind_Traders.shippers` as sp
+ON ord.shipperID = sp.shipperID
+
+GROUP BY  1
+
+## Average Shipment Days on each country
+
+SELECT
+cs.country as Country,
+ROUND(AVG(DATE_DIFF(shippedDate, orderDate, DAY)),1) as Days_Shipped
+
+
+
+FROM `Northwind_Traders.orders` as ord
+
+LEFT JOIN `Northwind_Traders.Customer` as cs
+ON ord.customerID = cs.customer_id
+
+GROUP BY  1
+
+
+
